@@ -77,3 +77,64 @@ bool link_exist(const string& from, const string& to){
     return false;
 
 }
+
+// vector = exibir uma mensagem de sucesso informando o número total de vértices únicos e arestas inseridas
+vector<int> builder(string fileName){
+
+    int linkCount = 0;
+
+    ifstream file(fileName);
+    if (!file.is_open()) 
+    {
+        cerr << "Erro: não foi possivel abrir o arquivo. \"" << fileName << "\"." << endl;
+        exit(1);
+    }
+
+    // "descartar" o cabeçalho do arquivo
+    string trash;
+    getline(file, trash);
+    
+    while (getline(file, trash, ',')) // lê a 1ª coluna e entra no while apontando para a 2ª coluna
+    { 
+        string from, to;
+
+        getline(file, trash, ','); // descarta a 2° coluna
+        getline(file, trash, ','); // descarta a 3° coluna
+        getline(file, trash, ','); // descarta a 4° coluna
+        getline(file, from, ',');
+        getline(file, to, ',');
+        getline(file, trash); // descarta a 7° coluna
+
+        // verificação de timeout de rede ou estão em branco
+        if (to == "*" || from == "" || to == "") 
+        {
+            continue;
+        }
+        
+        // verificação se o vértice de origem já existe
+        auto pfrom = find(from);
+        if (pfrom == nullptr){
+            insert_node(from); // o vértice de origem da aresta não existe - adicionamos
+        }
+        // fazemos a mesma verificação para o vértice de destino
+        auto pto = find(to);
+        if (pto == nullptr){
+            insert_node(to);
+        }
+
+        if(link_exist(from, to) == false){ // verificamos se a aresta entre eles ainda não existe - criamos
+            insert_link(from, to);
+            linkCount++;
+        }
+
+    }
+
+    file.close();
+
+    vector<int> response;
+
+    response.push_back(nodes.size());
+    response.push_back(linkCount);
+
+    return response;
+}
