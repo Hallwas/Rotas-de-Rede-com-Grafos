@@ -11,6 +11,11 @@ struct node{
     vector<node*> links; // lista de ponteiros para os vértices(nodos) vizinhos
 };
 
+struct router{
+    string ip;
+    int indegree;
+};
+
 // Lista de Adjacências - tabela hash para armazenar as conexões entre os vértices(arestas) 
 // chave = o valor do vértice
 // valor = o vértice por completo(usamos para acessar os vizinhos)
@@ -78,6 +83,33 @@ bool link_exist(const string& from, const string& to){
 
 }
 
+// numero de arestas que chegam em um vertice
+int indegree(const std::string& vertice){
+    node* grafo = find(vertice);
+    if (grafo == nullptr)
+    {
+        return 0; // o grafo não existe
+    }
+
+    int result = 0;
+
+    // percorrendo o unordered_map - lista de adjacencia(contem todos os vértices)
+    for(auto nodo : nodes){
+        /* percorrendo o vetor de vizinhos de cada vértice(se algum vértice 
+        tem o que estamos buscando como vizinho, é uma aresta chegando a ele)*/
+        for(auto vizinho : nodo.second.links){
+        // se algum aponta para o vértice a ser procurado, +1
+        if (vizinho->value == vertice)
+        {
+            result++;
+        }
+        }
+    }
+
+    return result;
+
+}
+
 // vector = exibir uma mensagem de sucesso informando o número total de vértices únicos e arestas inseridas
 vector<int> builder(string fileName){
 
@@ -137,4 +169,42 @@ vector<int> builder(string fileName){
     response.push_back(linkCount);
 
     return response;
+}
+
+// função específica para ordenar a struct - primeiro considera o grau, e, em caso de empate, o ip
+bool order(const router& a, const router& b){ 
+    if (a.indegree != b.indegree) {
+        return a.indegree > b.indegree; 
+    }
+    // empate no grau - testamos pelo nome(ip)
+    return a.ip < b.ip;
+};
+
+vector<router> critical_routers(){
+
+    vector<router> routers;
+
+    // percorremos o unordered_map chamando a função para calcular o indegree de cada vértice
+    for (const auto& vertex : nodes) {
+        string value = vertex.first;
+        int degree = indegree(value);
+
+        // criamos no formato da struct
+        router r = {value, degree};
+
+        // inserimos o resultado no vetor
+        routers.push_back(r);
+    }
+
+    // ordenamos o vetor usando uma função específica para a struct
+    sort(routers.begin(), routers.end(), order);
+
+    // verifica se o grafo tem + de 5 vértices - evitar um erro ao reduzir o vetor
+    int limit = min(5, (int)routers.size());
+
+    // mantém apenas o top 5(ou menos de acordo com a verificação anterior)
+    routers.resize(limit);
+
+    // devolve o vetor já "formatado"
+    return routers;
 }
