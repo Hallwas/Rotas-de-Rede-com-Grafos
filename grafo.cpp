@@ -259,6 +259,7 @@ vector<string> shortest_path(const string from, const string to){
             // se não foi visitado, é adicionado para ser
             explorationQueue.push(vizinho); // adicionamos o vizinho à fila
             visited.insert(vizinho); // marca ele como já visitado
+
             cameFrom[vizinho->value] = current->value; // salvamos no mapa o "filho = pai"
         }
         
@@ -290,4 +291,78 @@ vector<string> shortest_path(const string from, const string to){
     reverse(path.begin(), path.end());
     
     return path;
+}
+
+// função para verificar a maior distância que o nodo de origem pode percorrer - sempre seguindo o menor caminho para cada destino
+int bfs_max_distance(const string from){
+    // verificação se o nodo de origem existe
+    auto pfrom = find(from);
+    if (!pfrom) return 0; // retorna 0 caso não exista
+
+    // usamos o set para organizar a lista de nodos já visitados
+    unordered_set<node*> visited;
+
+    // conteiner do c++ para FILA - organiza a expansão BFS
+    queue<node*> explorationQueue;
+
+    // mapa para armazenar a distância de cada nodo da origem
+    unordered_map<node*, int> distanceFromSource;
+
+    // adicionamos o nodo de origem na fila
+    explorationQueue.push(pfrom);
+
+    // marcamos o nodo origem como já visitado
+    visited.insert(pfrom);
+
+    // marcamos a distância do nodo de origem para a origem = 0
+    distanceFromSource[pfrom] = 0;
+
+    // laço de repetição - segue até a fila ficar vazia
+    while (!explorationQueue.empty())
+    {
+        // pega o nodo em primeiro na fila
+        auto current = explorationQueue.front(); 
+        // tira ele da fila
+        explorationQueue.pop();
+
+        // laço para percorrer os vizinhos do nodo atual(1° da fila)
+        for(auto& vizinho : current->links){
+        /* verificação se o vizinho em questão já não 
+        foi visitado(estaria na fila de controle de visitados)*/
+        if (visited.count(vizinho) == 0){
+            // se não foi visitado, é adicionado para ser
+            explorationQueue.push(vizinho); // adicionamos o vizinho à fila
+            visited.insert(vizinho); // marca ele como já visitado
+
+            // atualiza a distância desse vizinho da origem = distância de quem chegou nele + 1
+            distanceFromSource[vizinho] = distanceFromSource[current] + 1;
+        }
+        
+        }
+    }
+
+    // percorre o map que armazena as distancias para encontrar a maior
+    int record = 0;
+    for(auto it = distanceFromSource.begin(); it != distanceFromSource.end(); ++it){
+        if (it->second > record){
+            record = it->second;
+        }
+    }
+
+    return record;
+}
+
+int diameter(){
+    int record = 0;
+
+    /*percorre todos os nodos e encontra a maior distância que cada um pode percorrer - seguindo o menor caminho
+    - usando a função auxiliar e armazenando o maior na variável auxiliar 'record' */ 
+    for(auto it = nodes.begin(); it != nodes.end(); ++it){
+        int nodeResult = bfs_max_distance(it->first);
+        if(nodeResult > record){
+            record = nodeResult;
+        }
+    }
+
+    return record;
 }
