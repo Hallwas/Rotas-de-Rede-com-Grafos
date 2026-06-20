@@ -3,6 +3,8 @@
 #include <unordered_map>
 #include <algorithm>
 #include <fstream>
+#include <queue>
+#include <unordered_set>
 
 using namespace std;
 
@@ -73,7 +75,7 @@ bool link_exist(const string& from, const string& to){
         return false;
     }
 
-    auto it = std::find(pfrom->links.begin(), pfrom->links.end(), pto);
+    auto it = find(pfrom->links.begin(), pfrom->links.end(), pto);
 
     if (it != pfrom->links.end())
     {
@@ -84,7 +86,7 @@ bool link_exist(const string& from, const string& to){
 }
 
 // numero de arestas que chegam em um vertice
-int indegree(const std::string& vertice){
+int indegree(const string& vertice){
     node* grafo = find(vertice);
     if (grafo == nullptr)
     {
@@ -111,7 +113,7 @@ int indegree(const std::string& vertice){
 }
 
 // vector = exibir uma mensagem de sucesso informando o número total de vértices únicos e arestas inseridas
-vector<int> builder(string fileName){
+vector<int> builder(const string fileName){
 
     int linkCount = 0;
 
@@ -207,4 +209,85 @@ vector<router> critical_routers(){
 
     // devolve o vetor já "formatado"
     return routers;
+}
+
+vector<string> shortest_path(const string from, const string to){
+
+    vector<string> path;
+
+    // verificação se o nodo de origem existe
+    auto pfrom = find(from);
+    if (!pfrom) return path; // retorna vazio caso não exista
+
+    // mesma verificação para o de destino
+    auto pto = find(to);
+    if (!pto) return path;
+
+    // usamos o set para organizar a lista de nodos já visitados
+    unordered_set<node*> visited;
+
+    // conteiner do c++ para FILA - organiza a expansão BFS
+    queue<node*> explorationQueue;
+
+    // mapa para armazenar de onde aquele nodo foi descoberto - formato "filho = pai"
+    unordered_map<string, string> cameFrom;
+
+    // adicionamos o nodo de origem na fila
+    explorationQueue.push(pfrom);
+
+    // marcamos o nodo origem como já visitado
+    visited.insert(pfrom);
+
+    // laço de repetição - segue até a fila ficar vazia
+    while (!explorationQueue.empty())
+    {
+        // pega o nodo em primeiro na fila
+        auto current = explorationQueue.front(); 
+        // tira ele da fila
+        explorationQueue.pop();
+
+        // chegamos no destino
+        if (current->value == to){
+            break;
+        }
+
+        // laço para percorrer os vizinhos do nodo atual(1° da fila)
+        for(auto& vizinho : current->links){
+        /* verificação se o vizinho em questão já não 
+        foi visitado(estaria na fila de controle de visitados)*/
+        if (visited.count(vizinho) == 0){
+            // se não foi visitado, é adicionado para ser
+            explorationQueue.push(vizinho); // adicionamos o vizinho à fila
+            visited.insert(vizinho); // marca ele como já visitado
+            cameFrom[vizinho->value] = current->value; // salvamos no mapa o "filho = pai"
+        }
+        
+        }
+    }
+
+    if(visited.count(pto) == 0){ // o destino não foi visitado
+        return path;
+    }
+
+    // lógica para retornar o vetor de strings com o menor caminho
+
+    // começamos pelo destino
+    string currentIp = to;
+
+    // até chegar na origem
+    while(currentIp != from){
+        // adicionamos o atual no vetor de resposta
+        path.push_back(currentIp);
+
+        // atualizamos o atual para passar ao pai dele - é um passo pra trás
+        currentIp = cameFrom[currentIp];
+    }
+
+    // adicionamos o vetor de origem - cai fora do loop antes de fazer
+    path.push_back(from);
+
+    // como é armazenado no formato "filho = pai"(ao contrário), precisamos inverter
+    reverse(path.begin(), path.end());
+    
+    return path;
 }
