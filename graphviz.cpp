@@ -104,6 +104,41 @@ void exportar_com_caminho(string nomeArquivo, vector<string> caminho) {
     cout << "Arquivo DOT com caminho destacado gerado: " << nomeArquivo << endl;
 }
 
+void exportar_com_caminho(string nomeArquivo, const vector<string>& caminho) {
+    ofstream arquivo(nomeArquivo);
+    if (!arquivo.is_open()) return;
+
+    arquivo << "digraph G {" << endl;
+    arquivo << "  rankdir=LR;" << endl;
+    
+    // Criamos um set para consulta rápida se um IP faz parte do caminho
+    unordered_set<string> setCaminho(caminho.begin(), caminho.end());
+
+    for (const auto& par : nodes) {
+        string u = par.first;
+        // Pinta nós do caminho de vermelho
+        if (setCaminho.count(u)) {
+            arquivo << "  \"" << u << "\" [style=filled, fillcolor=red, fontcolor=white];" << endl;
+        }
+
+        for (node* vizinho : par.second.links) {
+            string v = vizinho->value;
+            bool arestaNoCaminho = false;
+            // Verifica se a aresta (u->v) faz parte do caminho
+            for(size_t i = 0; i < caminho.size() - 1; ++i) {
+                if(caminho[i] == u && caminho[i+1] == v) arestaNoCaminho = true;
+            }
+            
+            if (arestaNoCaminho)
+                arquivo << "  \"" << u << "\" -> \"" << v << "\" [color=red, penwidth=2.0];" << endl;
+            else
+                arquivo << "  \"" << u << "\" -> \"" << v << "\";" << endl;
+        }
+    }
+    arquivo << "}" << endl;
+    arquivo.close();
+}
+
 // Gera um arquivo .dot igual ao grafo completo, mas destaca em laranja
 // os roteadores criticos (com maior indegree), mostrando o valor do indegree como rotulo extra no no.
 void exportar_roteadores_criticos_dot(string nomeArquivo, vector<router> criticos) {
