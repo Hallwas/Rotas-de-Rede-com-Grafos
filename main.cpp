@@ -41,6 +41,53 @@ void opcao1(const string& nomeArquivo) {
     gerar_saida_visual(dotFile, nomeArquivo, formato);
 }
 
+// Encontrar menor caminho entre dois IPs
+// Usa shortest_path() do grafo.cpp (BFS)
+// Usa exportar_com_caminho() do graphviz.cpp
+void opcao2(const string& nomeArquivo) {
+    string ipOrigem, ipDestino;
+
+    cout << "Digite o IP de Origem: ";
+    cin >> ipOrigem;
+    cout << "Digite o IP de Destino: ";
+    cin >> ipDestino;
+
+    vector<string> caminho = shortest_path(ipOrigem, ipDestino);
+
+    if (caminho.empty()) {
+        cout << "\nSem conectividade: nao existe caminho entre "
+             << ipOrigem << " e " << ipDestino << "." << endl;
+        return;
+    }
+
+    // numero de saltos = arestas percorridas = tamanho do vetor - 1
+    int totalSaltos = (int)caminho.size() - 1;
+    cout << "\nCaminho encontrado (" << totalSaltos << " saltos):" << endl;
+
+    for (int i = 0; i < (int)caminho.size(); i++) {
+        if (i > 0) cout << " -> ";
+        cout << caminho[i];
+    }
+    cout << endl;
+
+    // gera o .dot com o caminho destacado e exporta no formato escolhido
+    string dotFile = nomeArquivo + "_caminho.dot";
+    exportar_com_caminho(dotFile, caminho);
+
+    int formato = exibirSubMenu();
+    gerar_saida_visual(dotFile, nomeArquivo, formato);
+}
+
+// Calcular diametro do grafo
+// Usa diameter() do grafo.cpp
+void opcao3() {
+    cout << "\nCalculando diametro do grafo..." << endl;
+
+    int d = diameter();
+
+    cout << "Diametro do grafo: " << d << " saltos" << endl;
+}
+
 // Identificar roteadores criticos (top 5 in-degree)
 void opcao4(const string& nomeArquivo) {
     vector<router> top5 = critical_routers();
@@ -89,10 +136,10 @@ int main(int argc, char* argv[]) {
                 opcao1(nomeArquivo);
                 break;
             case 2:
-                cout << "[opcao 2 ainda nao implementada]" << endl;
+                opcao2(nomeArquivo);
                 break;
             case 3:
-                cout << "[opcao 3 ainda nao implementada]" << endl;
+                opcao3();
                 break;
             case 4:
                 opcao4(nomeArquivo);
@@ -102,7 +149,6 @@ int main(int argc, char* argv[]) {
                 break;
             default:
                 cout << "Opcao invalida. Tente novamente." << endl;
-                break;
         }
     }
 
